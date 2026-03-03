@@ -71,7 +71,7 @@ class AuthRequestCard extends StatelessWidget {
                         AppLocalizations.of(context)!.ipAddress(request.requestIpAddress),
                         style: theme.textTheme.bodySmall,
                       ),
-                      if (ipTrust != null) ...[
+                      if (ipTrust != null && !isLoading) ...[
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
