@@ -9,6 +9,8 @@ class AuthRequestCard extends StatelessWidget {
   final VoidCallback onApprove;
   final VoidCallback onDeny;
   final bool isLoading;
+  /// IP trust from history: true=previously approved, false=previously denied, null=unknown.
+  final bool? ipTrust;
 
   const AuthRequestCard({
     super.key,
@@ -16,6 +18,7 @@ class AuthRequestCard extends StatelessWidget {
     required this.onApprove,
     required this.onDeny,
     this.isLoading = false,
+    this.ipTrust,
   });
 
   IconData _deviceIcon(String deviceType) {
@@ -68,6 +71,50 @@ class AuthRequestCard extends StatelessWidget {
                         AppLocalizations.of(context)!.ipAddress(request.requestIpAddress),
                         style: theme.textTheme.bodySmall,
                       ),
+                      if (ipTrust != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: ipTrust!
+                                ? Colors.green.withAlpha(30)
+                                : theme.colorScheme.error.withAlpha(30),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: ipTrust!
+                                  ? Colors.green.withAlpha(128)
+                                  : theme.colorScheme.error.withAlpha(128),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                ipTrust!
+                                    ? Icons.verified_user_outlined
+                                    : Icons.gpp_bad_outlined,
+                                size: 12,
+                                color: ipTrust!
+                                    ? Colors.green
+                                    : theme.colorScheme.error,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                ipTrust!
+                                    ? AppLocalizations.of(context)!.ipTrusted
+                                    : AppLocalizations.of(context)!.ipDenied,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: ipTrust!
+                                      ? Colors.green
+                                      : theme.colorScheme.error,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

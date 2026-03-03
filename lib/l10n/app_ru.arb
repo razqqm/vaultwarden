@@ -113,5 +113,8 @@
   "pollFiveSeconds": "5 секунд",
   "pollFifteenSeconds": "15 секунд",
   "pollThirtySeconds": "30 секунд",
-  "pollOneMinute": "1 минута"
+  "pollOneMinute": "1 минута",
+
+  "ipTrusted": "Известный IP",
+  "ipDenied": "Отклонённый IP"
 }

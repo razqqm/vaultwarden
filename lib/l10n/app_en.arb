@@ -189,5 +189,8 @@
   "pollFiveSeconds": "5 seconds",
   "pollFifteenSeconds": "15 seconds",
   "pollThirtySeconds": "30 seconds",
-  "pollOneMinute": "1 minute"
+  "pollOneMinute": "1 minute",
+
+  "ipTrusted": "Known IP",
+  "ipDenied": "Denied IP"
 }

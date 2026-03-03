@@ -278,9 +278,18 @@ class _PendingTab extends ConsumerWidget {
     required this.onDeny,
   });
 
+  /// Check last history entry for this IP: true=approved, false=denied, null=unknown.
+  bool? _ipTrustStatus(String ip, List<HistoryEntry> history) {
+    for (final entry in history) {
+      if (entry.ipAddress == ip) return entry.approved;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final requestsAsync = ref.watch(authRequestsProvider);
+    final history = ref.watch(historyProvider);
 
     return requestsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -400,6 +409,7 @@ class _PendingTab extends ConsumerWidget {
               return AuthRequestCard(
                 request: request,
                 isLoading: loadingRequestId == request.id,
+                ipTrust: _ipTrustStatus(request.requestIpAddress, history),
                 onApprove: () => onApprove(request.id),
                 onDeny: () => onDeny(request.id),
               );
