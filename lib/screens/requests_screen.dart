@@ -89,7 +89,10 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
       if (!available) {
         final existingKey = ref.read(userKeyProvider);
         if (existingKey != null) {
-          if (mounted) setState(() => _unlocked = true);
+          if (mounted) {
+            setState(() => _unlocked = true);
+            ref.read(authRequestsProvider.notifier).resume();
+          }
           return;
         }
       }

@@ -90,7 +90,7 @@ class AuthRequestsNotifier extends AsyncNotifier<List<AuthRequest>> {
   }
 
   /// Call when app returns to foreground — refresh + restart polling + WebSocket.
-  /// Retries up to 3 times with short delays if the first attempt fails,
+  /// Retries up to 10 times with short delays if the first attempt fails,
   /// so the user doesn't have to wait for the next poll tick.
   void resume() {
     ref.read(notificationServiceProvider).resume();
@@ -98,26 +98,43 @@ class AuthRequestsNotifier extends AsyncNotifier<List<AuthRequest>> {
     _startPollTimer();
   }
 
-  /// Try to refresh immediately, retrying a few times on transient failures.
+  /// Try to refresh aggressively for fast request pickup.
+  /// - 10 attempts total for speed
+  /// - 3 consecutive network errors → show error to user
+  /// - Server error with explicit status → show error immediately
   Future<void> _aggressiveRefresh() async {
-    const maxAttempts = 3;
+    const maxAttempts = 10;
+    const maxConsecutiveErrors = 3;
     const retryDelay = Duration(seconds: 2);
+    var consecutiveErrors = 0;
 
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         final requests = await _fetchRequests();
         state = AsyncData(requests);
-        return; // Success — stop retrying
-      } on DioException catch (e) {
-        if (e.response?.statusCode == 401) {
-          state = AsyncError(e, StackTrace.current);
-          return; // Auth error — don't retry
+        consecutiveErrors = 0; // Reset on success
+        if (attempt < maxAttempts) {
+          await Future.delayed(retryDelay);
         }
-        // Transient network error — retry unless last attempt
-        if (attempt == maxAttempts) return; // Keep old data
+      } on DioException catch (e) {
+        // Explicit server error (401, 403, etc.) — show immediately
+        if (e.response?.statusCode != null) {
+          state = AsyncError(e, StackTrace.current);
+          return;
+        }
+        // Network error — count consecutive failures
+        consecutiveErrors++;
+        if (consecutiveErrors >= maxConsecutiveErrors) {
+          state = AsyncError(e, StackTrace.current);
+          return;
+        }
         await Future.delayed(retryDelay);
-      } catch (_) {
-        if (attempt == maxAttempts) return;
+      } catch (e) {
+        consecutiveErrors++;
+        if (consecutiveErrors >= maxConsecutiveErrors) {
+          state = AsyncError(e, StackTrace.current);
+          return;
+        }
         await Future.delayed(retryDelay);
       }
     }
