@@ -31,19 +31,28 @@ String formatError(Object e, AppLocalizations l) {
 }
 
 String _formatDioError(DioException e, AppLocalizations l) {
-  // Custom message set by our API layer (e.g. error_description from server)
-  if (e.message != null &&
-      e.message!.isNotEmpty &&
-      !e.message!.startsWith('The')) {
-    return e.message!;
-  }
-
+  // If we got an HTTP response, always parse the body first —
+  // this handles both raw DioExceptions and re-thrown ones from our API layer.
   if (e.response != null) {
     return _formatHttpError(e, l);
   }
 
+  // Custom message set by our API layer (no response attached)
+  if (e.message != null &&
+      e.message!.isNotEmpty &&
+      !_isDefaultDioMessage(e.message!)) {
+    return e.message!;
+  }
+
   // Network-level errors (no response from server)
   return _formatNetworkError(e, l);
+}
+
+/// Default Dio messages that should never be shown to the user.
+bool _isDefaultDioMessage(String msg) {
+  return msg.startsWith('The ') ||
+      msg.startsWith('This exception') ||
+      msg.contains('RequestOptions.validateStatus');
 }
 
 String _formatHttpError(DioException e, AppLocalizations l) {
