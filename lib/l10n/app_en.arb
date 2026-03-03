@@ -1,0 +1,193 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Vault Approver",
+
+  "setupSubtitle": "One-time setup with your master password",
+  "serverUrlLabel": "Server URL",
+  "serverUrlHint": "https://vault.example.com",
+  "serverUrlRequired": "Enter your server URL",
+  "serverUrlInvalid": "Invalid URL",
+  "emailLabel": "Email",
+  "emailRequired": "Enter your email",
+  "emailInvalid": "Invalid email",
+  "masterPasswordLabel": "Master Password",
+  "masterPasswordRequired": "Enter your master password",
+  "settingUp": "Setting up...",
+  "setUp": "Set Up",
+
+  "twoFactorTitle": "Two-Factor Authentication",
+  "twoFactorPrompt": "Enter the 6-digit code from your authenticator app.",
+  "twoFactorHint": "000000",
+  "twoFactorCodeError": "Enter 6 digits",
+  "cancel": "Cancel",
+  "verify": "Verify",
+
+  "themeTooltip": "Theme: {mode}",
+  "@themeTooltip": {
+    "placeholders": {
+      "mode": { "type": "String" }
+    }
+  },
+
+  "errorInvalidCredentials": "Invalid email or password",
+  "errorInvalidTwoFactorCode": "Invalid two-factor code",
+  "errorInvalidRequest": "Invalid request — check your credentials",
+  "errorAccessDenied": "Access denied by server",
+  "errorEndpointNotFound": "Server endpoint not found — check URL",
+  "errorTooManyAttempts": "Too many attempts — try again later",
+  "errorServerRetry": "Server error ({status}) — try again later",
+  "@errorServerRetry": {
+    "placeholders": {
+      "status": { "type": "int" }
+    }
+  },
+  "errorServerWithData": "Server error ({status}): {data}",
+  "@errorServerWithData": {
+    "placeholders": {
+      "status": { "type": "int" },
+      "data": { "type": "String" }
+    }
+  },
+  "errorServer": "Server error ({status})",
+  "@errorServer": {
+    "placeholders": {
+      "status": { "type": "int" }
+    }
+  },
+  "errorConnectionTimeout": "Connection timed out — check server URL",
+  "errorCannotConnect": "Cannot connect to server",
+  "errorCannotResolve": "Cannot resolve server address — check URL",
+  "errorSslCertificate": "SSL certificate error — check server URL",
+  "errorRequestCancelled": "Request cancelled",
+  "errorInvalidMasterPassword": "Invalid master password",
+  "errorInvalidServerResponse": "Invalid server response — check URL",
+  "errorUnexpectedFormat": "Unexpected server response format",
+  "errorSessionExpired": "Session expired — please log in again",
+  "errorBiometricFailed": "Biometric authentication failed",
+  "errorNoConnection": "No connection to server",
+  "errorNoConnectionSubtitle": "Check your network connection and server availability",
+
+  "biometricReason": "Authenticate to access Vault Approver",
+
+  "unlockFailedMessage": "Unlock failed: {error}",
+  "@unlockFailedMessage": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "requestApproved": "Request approved",
+  "approveFailedMessage": "Approve failed: {error}",
+  "@approveFailedMessage": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "denyFailedMessage": "Deny failed: {error}",
+  "@denyFailedMessage": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "logoutTitle": "Logout",
+  "logoutConfirmation": "This will delete all stored keys. You will need to set up again with your master password.",
+  "logout": "Logout",
+
+  "locked": "Locked",
+  "unlock": "Unlock",
+
+  "authRequestsTitle": "Auth Requests",
+  "pendingTab": "Pending",
+  "historyTab": "History",
+
+  "errorGeneric": "Error: {error}",
+  "@errorGeneric": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "retry": "Retry",
+  "noPendingRequests": "No pending requests",
+  "pullDownToRefresh": "Pull down to refresh",
+
+  "clearHistoryTitle": "Clear History",
+  "clearHistoryConfirmation": "All history entries will be permanently deleted.",
+  "clear": "Clear",
+  "noHistoryYet": "No history yet",
+  "historyEmptySubtitle": "Approved and denied requests will appear here",
+  "clearAll": "Clear All",
+
+  "approved": "Approved",
+  "denied": "Denied",
+  "respondedIn": "Responded in {responseStr}",
+  "@respondedIn": {
+    "placeholders": {
+      "responseStr": { "type": "String" }
+    }
+  },
+
+  "justNow": "just now",
+  "secondsAgo": "{seconds}s ago",
+  "@secondsAgo": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+  "minutesAgo": "{minutes}m ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "hoursAgo": "{hours}h ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "daysAgo": "{days}d ago",
+  "@daysAgo": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+
+  "ipAddress": "IP: {ip}",
+  "@ipAddress": {
+    "placeholders": {
+      "ip": { "type": "String" }
+    }
+  },
+  "minutesLeft": "{minutes}m left",
+  "@minutesLeft": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "fingerprintLabel": "Fingerprint:",
+  "deny": "Deny",
+  "approve": "Approve",
+
+  "settings": "Settings",
+  "languageSection": "Language",
+  "languageSystem": "System",
+  "themeSection": "Theme",
+  "themeAuto": "Auto",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "lockTimeoutSection": "Lock timeout",
+  "autoRefreshSection": "Auto-refresh interval",
+
+  "timeoutImmediately": "Immediately",
+  "timeoutFifteenSeconds": "15 seconds",
+  "timeoutOneMinute": "1 minute",
+  "timeoutFiveMinutes": "5 minutes",
+  "timeoutFifteenMinutes": "15 minutes",
+  "timeoutNever": "Never",
+
+  "pollFiveSeconds": "5 seconds",
+  "pollFifteenSeconds": "15 seconds",
+  "pollThirtySeconds": "30 seconds",
+  "pollOneMinute": "1 minute"
+}

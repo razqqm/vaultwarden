@@ -1,0 +1,51 @@
+name: vault_approver
+description: Minimalist app for approving Vault "Login with device" requests.
+publish_to: 'none'
+version: 1.0.1+8
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
+  # State management
+  flutter_riverpod: ^2.5.0
+
+  # Crypto
+  pointycastle: ^4.0.0
+  cryptography: ^2.9.0
+
+  # Networking
+  dio: ^5.4.0
+  web_socket_channel: ^3.0.0
+  msgpack_dart: ^1.0.1
+
+  # Platform
+  local_auth: ^2.2.0
+  flutter_secure_storage: ^9.2.0
+  uuid: ^4.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/vault_approver_1024.png"
+  adaptive_icon_background: "#2E7D32"
+  adaptive_icon_foreground: "assets/icon/vault_approver_1024.png"
+  remove_alpha_ios: true
+  web:
+    generate: false
+
+flutter:
+  generate: true
+  uses-material-design: true

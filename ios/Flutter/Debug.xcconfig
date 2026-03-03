@@ -1,0 +1,2 @@
+#include? "Pods/Target Support Files/Pods-VaultApprover/Pods-VaultApprover.debug.xcconfig"
+#include "Generated.xcconfig"
