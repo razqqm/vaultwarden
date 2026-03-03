@@ -94,7 +94,11 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
         }
       }
       await ref.read(sessionProvider.notifier).unlockWithBiometrics();
-      if (mounted) setState(() => _unlocked = true);
+      if (mounted) {
+        setState(() => _unlocked = true);
+        // Immediately start polling + aggressive refresh after unlock
+        ref.read(authRequestsProvider.notifier).resume();
+      }
     } catch (e) {
       if (mounted) {
         final l = AppLocalizations.of(context)!;
@@ -285,48 +289,64 @@ class _PendingTab extends ConsumerWidget {
         final isNetwork = isNetworkError(error);
         final isAuth = isAuthError(error);
 
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isNetwork
-                      ? Icons.cloud_off_outlined
-                      : isAuth
-                          ? Icons.lock_clock_outlined
-                          : Icons.error_outline,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  isNetwork
-                      ? l.errorNoConnection
-                      : formatError(error, l),
-                  style: Theme.of(context).textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                if (isNetwork) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    l.errorNoConnectionSubtitle,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        return RefreshIndicator(
+          onRefresh: () =>
+              ref.read(authRequestsProvider.notifier).refresh(),
+          child: ListView(
+            children: [
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.6,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isNetwork
+                              ? Icons.cloud_off_outlined
+                              : isAuth
+                                  ? Icons.lock_clock_outlined
+                                  : Icons.error_outline,
+                          size: 64,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
-                    textAlign: TextAlign.center,
+                        const SizedBox(height: 16),
+                        Text(
+                          isNetwork
+                              ? l.errorNoConnection
+                              : formatError(error, l),
+                          style: Theme.of(context).textTheme.titleMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        if (isNetwork) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            l.errorNoConnectionSubtitle,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        Text(
+                          l.pullDownToRefresh,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(
+                          onPressed: () =>
+                              ref.read(authRequestsProvider.notifier).refresh(),
+                          icon: const Icon(Icons.refresh, size: 18),
+                          label: Text(l.retry),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: () =>
-                      ref.read(authRequestsProvider.notifier).refresh(),
-                  icon: const Icon(Icons.refresh, size: 18),
-                  label: Text(l.retry),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },

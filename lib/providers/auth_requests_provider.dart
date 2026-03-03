@@ -90,10 +90,37 @@ class AuthRequestsNotifier extends AsyncNotifier<List<AuthRequest>> {
   }
 
   /// Call when app returns to foreground — refresh + restart polling + WebSocket.
+  /// Retries up to 3 times with short delays if the first attempt fails,
+  /// so the user doesn't have to wait for the next poll tick.
   void resume() {
     ref.read(notificationServiceProvider).resume();
-    _silentRefresh();
+    _aggressiveRefresh();
     _startPollTimer();
+  }
+
+  /// Try to refresh immediately, retrying a few times on transient failures.
+  Future<void> _aggressiveRefresh() async {
+    const maxAttempts = 3;
+    const retryDelay = Duration(seconds: 2);
+
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        final requests = await _fetchRequests();
+        state = AsyncData(requests);
+        return; // Success — stop retrying
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 401) {
+          state = AsyncError(e, StackTrace.current);
+          return; // Auth error — don't retry
+        }
+        // Transient network error — retry unless last attempt
+        if (attempt == maxAttempts) return; // Keep old data
+        await Future.delayed(retryDelay);
+      } catch (_) {
+        if (attempt == maxAttempts) return;
+        await Future.delayed(retryDelay);
+      }
+    }
   }
 
   /// Background poll — silently ignores transient network errors.
