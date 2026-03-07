@@ -58,5 +58,8 @@ android/key.properties
 android/app/*.keystore
 android/app/*.jks
 
+# CocoaPods
+ios/Pods/
+
 # Internal notes (App Store review, release notes)
 RELEASE_NOTES.md

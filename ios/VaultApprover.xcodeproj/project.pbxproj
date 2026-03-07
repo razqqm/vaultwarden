@@ -197,7 +197,6 @@
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "VaultApprover" */;
 			buildPhases = (
 				6786D813A3BE78FF6BDD742A /* [CP] Check Pods Manifest.lock */,
-				7884E86B2EC3CE0000C636F2 /* Auto Increment Build Number */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
@@ -331,20 +330,6 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
-		};
-		7884E86B2EC3CE0000C636F2 /* Auto Increment Build Number */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Auto Increment Build Number";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ \"${CONFIGURATION}\" = \"Release\" ] || [ \"${CONFIGURATION}\" = \"Profile\" ]; then\n  PUBSPEC=\"${SRCROOT}/../pubspec.yaml\"\n  GENERATED=\"${SRCROOT}/Flutter/Generated.xcconfig\"\n  CURRENT=$(grep '^version:' \"$PUBSPEC\" | head -1)\n  BUILD_NUMBER=$(echo \"$CURRENT\" | sed 's/.*+//')\n  VERSION_NAME=$(echo \"$CURRENT\" | sed 's/version: *//;s/+.*//')\n  NEW_BUILD=$((BUILD_NUMBER + 1))\n  sed -i '' \"s/^version: .*/version: ${VERSION_NAME}+${NEW_BUILD}/\" \"$PUBSPEC\"\n  sed -i '' \"s/^FLUTTER_BUILD_NUMBER=.*/FLUTTER_BUILD_NUMBER=${NEW_BUILD}/\" \"$GENERATED\"\n  echo \"Build number: $BUILD_NUMBER -> $NEW_BUILD\"\nfi\n";
 		};
 		9740EEB61CF901F6004384FC /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;

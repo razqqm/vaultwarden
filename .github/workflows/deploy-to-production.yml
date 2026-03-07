@@ -1,0 +1,60 @@
+name: Deploy to Production
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          if [[ "$TAG" == *"+"* ]]; then
+            VERSION_NAME="${TAG%%+*}"
+            BUILD_NUMBER="${TAG##*+}"
+          else
+            VERSION_NAME="$TAG"
+            CURRENT_BUILD=$(grep '^version:' pubspec.yaml | head -1 | sed 's/.*+//')
+            BUILD_NUMBER=$((CURRENT_BUILD + 1))
+          fi
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION_NAME+$BUILD_NUMBER"
+
+      - name: Update pubspec.yaml version
+        run: |
+          VERSION="${{ steps.version.outputs.version_name }}"
+          BUILD="${{ steps.version.outputs.build_number }}"
+          sed -i "s/^version: .*/version: ${VERSION}+${BUILD}/" pubspec.yaml
+          echo "Updated pubspec.yaml to version: ${VERSION}+${BUILD}"
+
+      - name: Commit version update to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pubspec.yaml
+          if git diff --cached --quiet; then
+            echo "No version changes to commit"
+          else
+            git commit -m "Set version to ${{ steps.version.outputs.version_name }}+${{ steps.version.outputs.build_number }} for release"
+            git push origin HEAD:main
+          fi
+
+      - name: Merge main into production
+        run: |
+          git checkout production
+          git merge main --ff-only
+          git push origin production
