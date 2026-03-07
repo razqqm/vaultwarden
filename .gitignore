@@ -39,8 +39,8 @@ migrate_working_dir/
 lib/l10n/app_localizations.dart
 lib/l10n/app_localizations_*.dart
 
-# Generated plugin registrants
-**/GeneratedPluginRegistrant.*
+# Generated plugin registrants (Android only — iOS ones must be committed for Xcode Cloud)
+android/app/src/**/GeneratedPluginRegistrant.java
 
 # Symbolication related
 app.*.symbols
