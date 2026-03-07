@@ -11,17 +11,19 @@ export PATH="$HOME/flutter/bin:$PATH"
 flutter --version
 flutter precache --ios
 
-# Flutter build
+# Generate plugin registrant and get dependencies
 echo "Running flutter pub get..."
 cd "$CI_PRIMARY_REPOSITORY_PATH"
 flutter pub get
 
-echo "Running flutter build ios..."
-flutter build ios --release --no-codesign
-
-# CocoaPods
+# CocoaPods (must run BEFORE flutter build to fix bridging header scan)
 echo "Installing CocoaPods dependencies..."
 cd "$CI_PRIMARY_REPOSITORY_PATH/ios"
 pod install
+
+# Flutter build
+echo "Running flutter build ios..."
+cd "$CI_PRIMARY_REPOSITORY_PATH"
+flutter build ios --release --no-codesign
 
 echo "=== ci_post_clone.sh complete ==="
