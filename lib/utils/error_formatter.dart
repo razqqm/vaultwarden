@@ -27,6 +27,9 @@ String formatError(Object e, AppLocalizations l) {
   if (msg.contains('Setup not completed')) {
     return l.errorSessionExpired;
   }
+  if (msg.contains('UserCancelled') || msg.contains('PasscodeNotSet')) {
+    return l.errorBiometricFailed;
+  }
   return msg.replaceAll('Exception: ', '');
 }
 

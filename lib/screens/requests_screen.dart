@@ -52,6 +52,12 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
       // Only record pause time if actually unlocked (not during biometric flow)
       if (_unlocked) {
         _pausedAt = DateTime.now();
+        // Immediately hide content so it's not visible when app resumes.
+        // Don't clear the key yet — we'll decide on resume based on timeout.
+        final timeout = ref.read(lockTimeoutProvider);
+        if (timeout != -1) {
+          setState(() => _unlocked = false);
+        }
       }
     } else if (state == AppLifecycleState.resumed) {
       final timeout = ref.read(lockTimeoutProvider);
@@ -60,16 +66,16 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
         ref.read(authRequestsProvider.notifier).resume();
         return;
       }
-      if (_pausedAt != null && _unlocked) {
+      if (_pausedAt != null && !_unlocked) {
         final elapsed = DateTime.now().difference(_pausedAt!).inSeconds;
         _pausedAt = null;
-        if (elapsed >= timeout) {
-          ref.read(sessionProvider.notifier).lock();
-          setState(() => _unlocked = false);
-          _tryUnlock();
+        if (elapsed < timeout) {
+          // Timeout not reached — restore without biometric
+          _unlockSilently();
         } else {
-          // Timeout not reached — resume polling + refresh
-          ref.read(authRequestsProvider.notifier).resume();
+          // Timeout reached — clear key and require biometric
+          ref.read(sessionProvider.notifier).lock();
+          _tryUnlock();
         }
       } else if (!_unlocked) {
         _tryUnlock();
@@ -77,6 +83,18 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
         // Unlocked, no pausedAt — just resume
         ref.read(authRequestsProvider.notifier).resume();
       }
+    }
+  }
+
+  /// Re-unlock without biometric when timeout hasn't elapsed yet.
+  void _unlockSilently() {
+    final existingKey = ref.read(userKeyProvider);
+    if (existingKey != null) {
+      setState(() => _unlocked = true);
+      ref.read(authRequestsProvider.notifier).resume();
+    } else {
+      // Key was cleared — need biometric
+      _tryUnlock();
     }
   }
 
@@ -103,7 +121,11 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
         ref.read(authRequestsProvider.notifier).resume();
       }
     } catch (e) {
-      if (mounted) {
+      // Don't show error when user intentionally cancelled biometric
+      final msg = e.toString();
+      final userCancelled = msg.contains('UserCancelled') ||
+          msg.contains('PasscodeNotSet');
+      if (mounted && !userCancelled) {
         final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l.unlockFailedMessage(formatError(e, l)))),
