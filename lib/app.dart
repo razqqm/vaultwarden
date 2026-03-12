@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'l10n/app_localizations.dart';
@@ -45,12 +46,33 @@ class App extends ConsumerWidget {
         brightness: Brightness.dark,
       ),
       home: sessionAsync.when(
-        data: (session) =>
-            session == null ? const SetupScreen() : const RequestsScreen(),
-        loading: () => const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        ),
-        error: (_, __) => const SetupScreen(),
+        data: (session) {
+          FlutterNativeSplash.remove();
+          return session == null ? const SetupScreen() : const RequestsScreen();
+        },
+        loading: () {
+          FlutterNativeSplash.remove();
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/icon/vault_approver_1024.png',
+                    width: 120,
+                    height: 120,
+                  ),
+                  const SizedBox(height: 32),
+                  const CircularProgressIndicator(),
+                ],
+              ),
+            ),
+          );
+        },
+        error: (_, __) {
+          FlutterNativeSplash.remove();
+          return const SetupScreen();
+        },
       ),
     );
   }
