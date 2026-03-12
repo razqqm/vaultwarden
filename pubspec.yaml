@@ -29,6 +29,7 @@ dependencies:
   local_auth: ^2.2.0
   flutter_secure_storage: ^9.2.0
   uuid: ^4.3.0
+  flutter_native_splash: ^2.4.0
 
 dev_dependencies:
   flutter_test:
@@ -46,6 +47,19 @@ flutter_launcher_icons:
   web:
     generate: false
 
+flutter_native_splash:
+  color: "#ffffff"
+  color_dark: "#000000"
+  image: "assets/icon/vault_approver_1024.png"
+  info_plist_files:
+    - "ios/VaultApprover/Info.plist"
+  android_12:
+    color: "#ffffff"
+    color_dark: "#000000"
+    image: "assets/icon/vault_approver_1024.png"
+
 flutter:
   generate: true
   uses-material-design: true
+  assets:
+    - assets/icon/vault_approver_1024.png
