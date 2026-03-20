@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app.dart';
 import '../l10n/app_localizations.dart';
+import '../providers/service_providers.dart';
 import '../providers/session_provider.dart';
 import '../services/vault_api.dart';
 import '../utils/error_formatter.dart';
@@ -35,6 +36,38 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   Future<void> _submit({String? twoFactorToken, int? twoFactorProvider}) async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Check biometrics before proceeding
+    final biometric = ref.read(biometricServiceProvider);
+    final available = await biometric.isAvailable();
+    if (!available && mounted) {
+      final l = AppLocalizations.of(context)!;
+      final retry = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: Text(l.biometricRequiredTitle),
+          content: Text(l.biometricRequiredMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(l.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(l.biometricRetry),
+            ),
+          ],
+        ),
+      );
+      if (retry == true) {
+        return _submit(
+          twoFactorToken: twoFactorToken,
+          twoFactorProvider: twoFactorProvider,
+        );
+      }
+      return;
+    }
 
     setState(() {
       _isLoading = true;

@@ -9,6 +9,10 @@ class BiometricService {
     return canCheck && isSupported;
   }
 
+  Future<List<BiometricType>> getAvailableBiometrics() {
+    return _auth.getAvailableBiometrics();
+  }
+
   Future<bool> authenticate({
     String reason = 'Authenticate to access Vault Approver',
   }) async {

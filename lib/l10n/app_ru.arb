@@ -116,5 +116,10 @@
   "pollOneMinute": "1 минута",
 
   "ipTrusted": "Известный IP",
-  "ipDenied": "Отклонённый IP"
+  "ipDenied": "Отклонённый IP",
+
+  "biometricRequiredTitle": "Требуется биометрия",
+  "biometricRequiredMessage": "Для безопасного хранения ключей шифрования необходима биометрическая аутентификация (Face ID, Touch ID или отпечаток пальца). Включите биометрию в настройках устройства.",
+  "biometricUnavailable": "Биометрия недоступна. Включите Face ID или отпечаток пальца в настройках.",
+  "biometricRetry": "Повторить"
 }

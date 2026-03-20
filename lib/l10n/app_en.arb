@@ -192,5 +192,10 @@
   "pollOneMinute": "1 minute",
 
   "ipTrusted": "Known IP",
-  "ipDenied": "Denied IP"
+  "ipDenied": "Denied IP",
+
+  "biometricRequiredTitle": "Biometrics Required",
+  "biometricRequiredMessage": "This app requires Face ID, Touch ID, or fingerprint authentication to securely store your encryption keys. Please enable biometrics in your device settings.",
+  "biometricUnavailable": "Biometrics unavailable. Enable Face ID or fingerprint in device settings.",
+  "biometricRetry": "Retry"
 }

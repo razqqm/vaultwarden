@@ -20,6 +20,7 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
     with WidgetsBindingObserver {
   bool _unlocked = false;
   bool _authenticating = false;
+  bool _biometricUnavailable = false;
   String? _loadingRequestId;
   DateTime? _pausedAt;
 
@@ -108,11 +109,22 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
         final existingKey = ref.read(userKeyProvider);
         if (existingKey != null) {
           if (mounted) {
-            setState(() => _unlocked = true);
+            setState(() {
+              _unlocked = true;
+              _biometricUnavailable = false;
+            });
             ref.read(authRequestsProvider.notifier).resume();
           }
           return;
         }
+        // No key and no biometrics — show unavailable message
+        if (mounted) {
+          setState(() => _biometricUnavailable = true);
+        }
+        return;
+      }
+      if (mounted) {
+        setState(() => _biometricUnavailable = false);
       }
       await ref.read(sessionProvider.notifier).unlockWithBiometrics();
       if (mounted) {
@@ -230,25 +242,37 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
   @override
   Widget build(BuildContext context) {
     if (!_unlocked) {
+      final l = AppLocalizations.of(context)!;
       return Scaffold(
         body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.lock_outlined,
-                size: 64,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 16),
-              Text(AppLocalizations.of(context)!.locked),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: _tryUnlock,
-                icon: const Icon(Icons.fingerprint),
-                label: Text(AppLocalizations.of(context)!.unlock),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _biometricUnavailable
+                      ? Icons.fingerprint_outlined
+                      : Icons.lock_outlined,
+                  size: 64,
+                  color: _biometricUnavailable
+                      ? Theme.of(context).colorScheme.error
+                      : Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 16),
+                Text(_biometricUnavailable ? l.biometricUnavailable : l.locked,
+                    textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: _tryUnlock,
+                  icon: Icon(_biometricUnavailable
+                      ? Icons.refresh
+                      : Icons.fingerprint),
+                  label: Text(
+                      _biometricUnavailable ? l.biometricRetry : l.unlock),
+                ),
+              ],
+            ),
           ),
         ),
       );
