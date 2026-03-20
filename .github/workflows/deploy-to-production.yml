@@ -55,6 +55,7 @@ jobs:
 
       - name: Merge main into production
         run: |
+          git fetch origin main production
           git checkout production
-          git merge main --ff-only
+          git merge origin/main --ff-only
           git push origin production
