@@ -3,7 +3,7 @@ set -e
 
 # Usage:
 #   ./scripts/build.sh ios       # Build iOS (archive-ready)
-#   ./scripts/build.sh android   # Build Android AAB
+#   ./scripts/build.sh android   # Build Android AAB (signed with YubiKey)
 #   ./scripts/build.sh both      # Build both
 
 PUBSPEC="pubspec.yaml"
@@ -35,20 +35,48 @@ fi
 
 if [ "$PLATFORM" = "android" ] || [ "$PLATFORM" = "both" ]; then
   echo ""
-  echo "=== Building Android AAB ==="
+  echo "=== Building Android AAB (unsigned) ==="
+  export YUBIKEY_SIGN=1
+  flutter build appbundle --release
+
+  UNSIGNED_AAB="build/app/outputs/bundle/release/app-release.aab"
+  if [ ! -f "$UNSIGNED_AAB" ]; then
+    echo "ERROR: AAB not found at $UNSIGNED_AAB"
+    exit 1
+  fi
+
+  echo ""
+  echo "=== Signing AAB with YubiKey ==="
   read -s -p "YubiKey PIN: " YUBIKEY_PIN
   echo
-  export YUBIKEY_SIGN=1
-  export YUBIKEY_PIN
-  flutter build appbundle --release
+
+  PKCS11_CFG="$(cd android && pwd)/yubikey-pkcs11.cfg"
+
+  jarsigner \
+    -keystore NONE \
+    -storetype PKCS11 \
+    -storepass "$YUBIKEY_PIN" \
+    -addprovider SunPKCS11 \
+    -providerArg "$PKCS11_CFG" \
+    -sigalg SHA256withRSA \
+    -digestalg SHA-256 \
+    -J--add-exports=jdk.crypto.cryptoki/sun.security.pkcs11=ALL-UNNAMED \
+    "$UNSIGNED_AAB" \
+    "X.509 Certificate for Digital Signature"
+
   unset YUBIKEY_PIN
 
-  AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
-  if [ -f "$AAB_PATH" ]; then
-    mkdir -p "$DESKTOP_FOLDER"
-    cp "$AAB_PATH" "$DESKTOP_FOLDER/VaultApprover-${VERSION_NAME}+${NEW_BUILD}.aab"
-    echo "✓ AAB copied to Desktop: $DESKTOP_FOLDER/"
+  echo ""
+  if jarsigner -verify "$UNSIGNED_AAB" > /dev/null 2>&1; then
+    echo "✓ Signature verified"
+  else
+    echo "ERROR: Signature verification FAILED"
+    exit 1
   fi
+
+  mkdir -p "$DESKTOP_FOLDER"
+  cp "$UNSIGNED_AAB" "$DESKTOP_FOLDER/VaultApprover-${VERSION_NAME}+${NEW_BUILD}.aab"
+  echo "✓ Signed AAB copied to: $DESKTOP_FOLDER/"
 fi
 
 echo ""
