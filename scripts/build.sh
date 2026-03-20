@@ -36,7 +36,12 @@ fi
 if [ "$PLATFORM" = "android" ] || [ "$PLATFORM" = "both" ]; then
   echo ""
   echo "=== Building Android AAB ==="
+  read -s -p "YubiKey PIN: " YUBIKEY_PIN
+  echo
+  export YUBIKEY_SIGN=1
+  export YUBIKEY_PIN
   flutter build appbundle --release
+  unset YUBIKEY_PIN
 
   AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
   if [ -f "$AAB_PATH" ]; then
