@@ -53,9 +53,6 @@ jobs:
             git push origin HEAD:main
           fi
 
-      - name: Merge main into production
+      - name: Update production to match main
         run: |
-          git fetch origin main production
-          git checkout production
-          git merge origin/main --no-ff -m "Merge main into production for ${{ steps.version.outputs.version_name }}+${{ steps.version.outputs.build_number }}"
-          git push origin production
+          git push origin origin/main:production --force
