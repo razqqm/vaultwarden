@@ -64,7 +64,7 @@ No vault UI, no stored passwords — just an approver.
   <em>Server login &nbsp;·&nbsp; App setup &nbsp;·&nbsp; Pending request &nbsp;·&nbsp; History</em>
 </p>
 
-## Tech Stack с
+## Tech Stack
 
 | Layer | Libraries |
 |:--|:--|
@@ -73,6 +73,7 @@ No vault UI, no stored passwords — just an approver.
 | Crypto | pointycastle 4.x, cryptography 2.x |
 | Networking | dio 5.x, web_socket_channel 3.x, msgpack_dart 1.x |
 | Platform | local_auth 2.x, flutter_secure_storage 9.x, uuid 4.x |
+| UI | flutter_native_splash 2.x, flutter_launcher_icons 0.14.x |
 | L10n | flutter_localizations (SDK), intl |
 
 ## Getting Started
@@ -143,6 +144,7 @@ lib/
 ├── utils/
 │   ├── constants.dart                # App constants
 │   ├── eff_wordlist.dart             # EFF long wordlist (7 776 words)
+│   ├── error_formatter.dart          # Localized error message formatter
 │   └── wordlist.dart                 # Wordlist loader
 │
 └── widgets/

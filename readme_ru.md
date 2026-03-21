@@ -73,6 +73,7 @@ Vault Approver — **узкоспециализированная** альтер
 | Крипто | pointycastle 4.x, cryptography 2.x |
 | Сеть | dio 5.x, web_socket_channel 3.x, msgpack_dart 1.x |
 | Платформа | local_auth 2.x, flutter_secure_storage 9.x, uuid 4.x |
+| UI | flutter_native_splash 2.x, flutter_launcher_icons 0.14.x |
 | Локализация | flutter_localizations (SDK), intl |
 
 ## Быстрый старт
@@ -143,6 +144,7 @@ lib/
 ├── utils/
 │   ├── constants.dart                # Константы приложения
 │   ├── eff_wordlist.dart             # EFF long wordlist (7 776 слов)
+│   ├── error_formatter.dart          # Форматирование локализованных ошибок
 │   └── wordlist.dart                 # Загрузчик списка слов
 │
 └── widgets/
