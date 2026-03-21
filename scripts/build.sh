@@ -47,33 +47,55 @@ if [ "$PLATFORM" = "android" ] || [ "$PLATFORM" = "both" ]; then
 
   echo ""
   echo "=== Signing AAB with YubiKey ==="
-  read -s -p "YubiKey PIN: " YUBIKEY_PIN
-  echo
 
   PKCS11_CFG="$(cd android && pwd)/yubikey-pkcs11.cfg"
+  MAX_PIN_ATTEMPTS=3
 
-  # Use -storepass:env to avoid PIN leaking via ps/proc command line
-  export YUBIKEY_PIN
-  jarsigner \
-    -keystore NONE \
-    -storetype PKCS11 \
-    -storepass:env YUBIKEY_PIN \
-    -addprovider SunPKCS11 \
-    -providerArg "$PKCS11_CFG" \
-    -sigalg SHA256withRSA \
-    -digestalg SHA-256 \
-    -J--add-exports=jdk.crypto.cryptoki/sun.security.pkcs11=ALL-UNNAMED \
-    "$UNSIGNED_AAB" \
-    "X.509 Certificate for Digital Signature"
-  SIGN_EXIT=$?
+  for ATTEMPT in $(seq 1 $MAX_PIN_ATTEMPTS); do
+    read -s -p "YubiKey PIN: " YUBIKEY_PIN
+    echo
 
-  # Clean up PIN from environment immediately
-  unset YUBIKEY_PIN
+    if [ -z "$YUBIKEY_PIN" ]; then
+      echo "ERROR: PIN cannot be empty"
+      continue
+    fi
 
-  if [ $SIGN_EXIT -ne 0 ]; then
-    echo "ERROR: jarsigner failed with exit code $SIGN_EXIT"
-    exit $SIGN_EXIT
-  fi
+    # Use -storepass:env to avoid PIN leaking via ps/proc command line
+    export YUBIKEY_PIN
+    SIGN_EXIT=0
+    SIGN_OUTPUT=$(jarsigner \
+      -keystore NONE \
+      -storetype PKCS11 \
+      -storepass:env YUBIKEY_PIN \
+      -addprovider SunPKCS11 \
+      -providerArg "$PKCS11_CFG" \
+      -sigalg SHA256withRSA \
+      -digestalg SHA-256 \
+      -J--add-exports=jdk.crypto.cryptoki/sun.security.pkcs11=ALL-UNNAMED \
+      "$UNSIGNED_AAB" \
+      "X.509 Certificate for Digital Signature" 2>&1) || SIGN_EXIT=$?
+
+    # Clean up PIN from environment immediately
+    unset YUBIKEY_PIN
+
+    if [ $SIGN_EXIT -eq 0 ]; then
+      break
+    fi
+
+    if echo "$SIGN_OUTPUT" | grep -qi "load failed\|pin incorrect\|pin invalid\|CKR_PIN_INCORRECT"; then
+      REMAINING=$((MAX_PIN_ATTEMPTS - ATTEMPT))
+      if [ $REMAINING -gt 0 ]; then
+        echo "ERROR: Wrong PIN ($REMAINING attempts left)"
+      else
+        echo "ERROR: Wrong PIN. No attempts left."
+        echo "WARNING: Further incorrect attempts may lock your YubiKey!"
+        exit 1
+      fi
+    else
+      echo "ERROR: jarsigner failed: $SIGN_OUTPUT"
+      exit $SIGN_EXIT
+    fi
+  done
 
   echo ""
   if jarsigner -verify "$UNSIGNED_AAB" > /dev/null 2>&1; then
