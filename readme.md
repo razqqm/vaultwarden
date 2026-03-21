@@ -64,7 +64,7 @@ No vault UI, no stored passwords — just an approver.
   <em>Server login &nbsp;·&nbsp; App setup &nbsp;·&nbsp; Pending request &nbsp;·&nbsp; History</em>
 </p>
 
-## Tech Stack
+## Tech Stack с
 
 | Layer | Libraries |
 |:--|:--|
