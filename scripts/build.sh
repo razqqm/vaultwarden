@@ -52,10 +52,12 @@ if [ "$PLATFORM" = "android" ] || [ "$PLATFORM" = "both" ]; then
 
   PKCS11_CFG="$(cd android && pwd)/yubikey-pkcs11.cfg"
 
+  # Use -storepass:env to avoid PIN leaking via ps/proc command line
+  export YUBIKEY_PIN
   jarsigner \
     -keystore NONE \
     -storetype PKCS11 \
-    -storepass "$YUBIKEY_PIN" \
+    -storepass:env YUBIKEY_PIN \
     -addprovider SunPKCS11 \
     -providerArg "$PKCS11_CFG" \
     -sigalg SHA256withRSA \
@@ -63,8 +65,15 @@ if [ "$PLATFORM" = "android" ] || [ "$PLATFORM" = "both" ]; then
     -J--add-exports=jdk.crypto.cryptoki/sun.security.pkcs11=ALL-UNNAMED \
     "$UNSIGNED_AAB" \
     "X.509 Certificate for Digital Signature"
+  SIGN_EXIT=$?
 
+  # Clean up PIN from environment immediately
   unset YUBIKEY_PIN
+
+  if [ $SIGN_EXIT -ne 0 ]; then
+    echo "ERROR: jarsigner failed with exit code $SIGN_EXIT"
+    exit $SIGN_EXIT
+  fi
 
   echo ""
   if jarsigner -verify "$UNSIGNED_AAB" > /dev/null 2>&1; then
