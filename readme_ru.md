@@ -14,6 +14,12 @@
 </p>
 
 <p align="center">
+  <a href="https://apps.apple.com/app/vaultapprover/id6759904301"><img src="https://img.shields.io/badge/App_Store-0D96F6?style=for-the-badge&logo=app-store&logoColor=white" alt="Скачать в App Store"></a>
+  &nbsp;
+  <a href="https://play.google.com/store/apps/details?id=com.vaultapprover.app"><img src="https://img.shields.io/badge/Google_Play-414141?style=for-the-badge&logo=google-play&logoColor=white" alt="Скачать в Google Play"></a>
+</p>
+
+<p align="center">
   <a href="https://flutter.dev"><img src="https://img.shields.io/badge/Flutter-3.5+-02569B?logo=flutter" alt="Flutter"></a>
   <a href="https://dart.dev"><img src="https://img.shields.io/badge/Dart-3.5+-0175C2?logo=dart" alt="Dart"></a>
   <img src="https://img.shields.io/badge/Platform-iOS%20%7C%20Android-lightgrey" alt="Platform">
