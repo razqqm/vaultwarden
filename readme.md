@@ -51,8 +51,9 @@ No vault UI, no stored passwords — just an approver.
 | 📲 | **2FA / TOTP** | Supports two-factor auth during initial setup |
 | 🌍 | **Localization** | English & Russian, in-app language switcher |
 | 🎨 | **Themes** | System / Light / Dark |
-| 🔄 | **Auto-refresh** | Configurable polling (15 s – 5 min) |
-| ⏱️ | **Lock timeout** | Configurable auto-lock (immediate – 15 min) |
+| 🔒 | **Privacy screen** | iOS blur overlay + Android FLAG_SECURE; hides content in app switcher |
+| 🔄 | **Auto-refresh** | Configurable polling (5 s / 15 s / 30 s / 1 min) |
+| ⏱️ | **Lock timeout** | Auto-lock: immediate / 15 s / 1 min / 5 min / 15 min / never |
 
 ## Screenshots
 
@@ -162,10 +163,12 @@ lib/
 
 | Aspect | Implementation |
 |:--|:--|
-| Key storage | UserKey in Keychain (iOS) / Keystore (Android), protected by biometrics |
+| Key storage | UserKey encrypted (AES-256-CBC) and stored in Keychain (iOS) / Keystore (Android) |
+| Biometric gate | Face ID / Touch ID required on every app launch to decrypt UserKey |
 | E2E | Server never sees encryption keys |
 | Master password | Entered **once** during setup, never stored |
 | Request verification | Fingerprint phrase displayed before approval |
+| Privacy screen | iOS: blur overlay in app switcher; Android: `FLAG_SECURE` blocks screenshots & recents |
 | Biometric change | Key invalidated → re-setup required |
 | Server compromise | Does not reveal UserKey |
 
@@ -199,7 +202,7 @@ lib/
    → HMAC-SHA256 verify → AES-256-CBC decrypt
    → userKey (64 bytes = 32 enc + 32 mac)
 
-7. Random biometricStorageKey (32 bytes)
+7. Random biometricStorageKey (64 bytes)
    → AES-256-CBC encrypt(userKey) → store in Keychain/Keystore
    → Store refresh_token in secure storage
 ```
