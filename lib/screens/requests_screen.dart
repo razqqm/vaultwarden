@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../app.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/auth_requests_provider.dart';
-import '../providers/service_providers.dart';
 import '../providers/session_provider.dart';
 import '../utils/error_formatter.dart';
 import '../widgets/auth_request_card.dart';
@@ -18,22 +17,14 @@ class RequestsScreen extends ConsumerStatefulWidget {
 
 class _RequestsScreenState extends ConsumerState<RequestsScreen>
     with WidgetsBindingObserver {
-  bool _unlocked = false;
-  bool _authenticating = false;
-  bool _biometricUnavailable = false;
   String? _loadingRequestId;
-  DateTime? _pausedAt;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    final existingKey = ref.read(userKeyProvider);
-    if (existingKey != null) {
-      _unlocked = true;
-    } else {
-      _tryUnlock();
-    }
+    // Start polling + aggressive refresh on unlock.
+    ref.read(authRequestsProvider.notifier).resume();
   }
 
   @override
@@ -44,118 +35,10 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Ignore lifecycle events while Face ID dialog is showing
-    if (_authenticating) return;
-
-    if (state == AppLifecycleState.hidden) {
-      // Hide content early — before iOS captures the app snapshot.
-      // On iOS the order is: resumed → inactive → hidden → paused.
-      // Hiding here gives Flutter a frame to render the lock screen
-      // before the OS takes its visual snapshot of the app.
-      if (_unlocked) {
-        final timeout = ref.read(lockTimeoutProvider);
-        if (timeout != -1) {
-          _pausedAt ??= DateTime.now();
-          setState(() => _unlocked = false);
-        }
-      }
-    } else if (state == AppLifecycleState.paused) {
-      // Stop polling in background
+    if (state == AppLifecycleState.paused) {
       ref.read(authRequestsProvider.notifier).pause();
-      // Fallback: also hide content here in case hidden wasn't called
-      if (_unlocked) {
-        final timeout = ref.read(lockTimeoutProvider);
-        if (timeout != -1) {
-          _pausedAt ??= DateTime.now();
-          setState(() => _unlocked = false);
-        }
-      }
     } else if (state == AppLifecycleState.resumed) {
-      final timeout = ref.read(lockTimeoutProvider);
-      if (timeout == -1) {
-        // Never lock — just resume polling
-        ref.read(authRequestsProvider.notifier).resume();
-        return;
-      }
-      if (_pausedAt != null && !_unlocked) {
-        final elapsed = DateTime.now().difference(_pausedAt!).inSeconds;
-        _pausedAt = null;
-        if (elapsed < timeout) {
-          // Timeout not reached — restore without biometric
-          _unlockSilently();
-        } else {
-          // Timeout reached — clear key and require biometric
-          ref.read(sessionProvider.notifier).lock();
-          _tryUnlock();
-        }
-      } else if (!_unlocked) {
-        _tryUnlock();
-      } else {
-        // Unlocked, no pausedAt — just resume
-        ref.read(authRequestsProvider.notifier).resume();
-      }
-    }
-  }
-
-  /// Re-unlock without biometric when timeout hasn't elapsed yet.
-  void _unlockSilently() {
-    final existingKey = ref.read(userKeyProvider);
-    if (existingKey != null) {
-      setState(() => _unlocked = true);
       ref.read(authRequestsProvider.notifier).resume();
-    } else {
-      // Key was cleared — need biometric
-      _tryUnlock();
-    }
-  }
-
-  Future<void> _tryUnlock() async {
-    if (_authenticating) return;
-    _authenticating = true;
-    try {
-      final biometric = ref.read(biometricServiceProvider);
-      final available = await biometric.isAvailable();
-      if (!available) {
-        final existingKey = ref.read(userKeyProvider);
-        if (existingKey != null) {
-          if (mounted) {
-            setState(() {
-              _unlocked = true;
-              _biometricUnavailable = false;
-            });
-            ref.read(authRequestsProvider.notifier).resume();
-          }
-          return;
-        }
-        // No key and no biometrics — show unavailable message
-        if (mounted) {
-          setState(() => _biometricUnavailable = true);
-        }
-        return;
-      }
-      if (mounted) {
-        setState(() => _biometricUnavailable = false);
-      }
-      await ref.read(sessionProvider.notifier).unlockWithBiometrics();
-      if (mounted) {
-        setState(() => _unlocked = true);
-        // Immediately start polling + aggressive refresh after unlock
-        ref.read(authRequestsProvider.notifier).resume();
-      }
-    } catch (e) {
-      // Don't show error when user intentionally cancelled biometric
-      final msg = e.toString();
-      final userCancelled = msg.contains('UserCancelled') ||
-          msg.contains('PasscodeNotSet');
-      if (mounted && !userCancelled) {
-        final l = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.unlockFailedMessage(formatError(e, l)))),
-        );
-      }
-    } finally {
-      _authenticating = false;
-      _pausedAt = null; // Ensure no stale pause time after unlock
     }
   }
 
@@ -251,43 +134,6 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
 
   @override
   Widget build(BuildContext context) {
-    if (!_unlocked) {
-      final l = AppLocalizations.of(context)!;
-      return Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _biometricUnavailable
-                      ? Icons.fingerprint_outlined
-                      : Icons.lock_outlined,
-                  size: 64,
-                  color: _biometricUnavailable
-                      ? Theme.of(context).colorScheme.error
-                      : Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(height: 16),
-                Text(_biometricUnavailable ? l.biometricUnavailable : l.locked,
-                    textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                FilledButton.icon(
-                  onPressed: _tryUnlock,
-                  icon: Icon(_biometricUnavailable
-                      ? Icons.refresh
-                      : Icons.fingerprint),
-                  label: Text(
-                      _biometricUnavailable ? l.biometricRetry : l.unlock),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
     return DefaultTabController(
       length: 2,
       child: Scaffold(

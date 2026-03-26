@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app.dart';
 import '../models/cipher_string.dart';
 import '../models/user_session.dart';
 import 'service_providers.dart';
@@ -102,6 +103,7 @@ class SessionNotifier extends AsyncNotifier<UserSession?> {
     // Set state
     state = AsyncData(session);
     ref.read(userKeyProvider.notifier).state = userKey;
+    ref.read(isLockedProvider.notifier).state = false;
 
     return userKey;
   }
