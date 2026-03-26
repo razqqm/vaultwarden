@@ -47,16 +47,26 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
     // Ignore lifecycle events while Face ID dialog is showing
     if (_authenticating) return;
 
-    if (state == AppLifecycleState.paused) {
-      // Stop polling in background
-      ref.read(authRequestsProvider.notifier).pause();
-      // Only record pause time if actually unlocked (not during biometric flow)
+    if (state == AppLifecycleState.hidden) {
+      // Hide content early — before iOS captures the app snapshot.
+      // On iOS the order is: resumed → inactive → hidden → paused.
+      // Hiding here gives Flutter a frame to render the lock screen
+      // before the OS takes its visual snapshot of the app.
       if (_unlocked) {
-        _pausedAt = DateTime.now();
-        // Immediately hide content so it's not visible when app resumes.
-        // Don't clear the key yet — we'll decide on resume based on timeout.
         final timeout = ref.read(lockTimeoutProvider);
         if (timeout != -1) {
+          _pausedAt ??= DateTime.now();
+          setState(() => _unlocked = false);
+        }
+      }
+    } else if (state == AppLifecycleState.paused) {
+      // Stop polling in background
+      ref.read(authRequestsProvider.notifier).pause();
+      // Fallback: also hide content here in case hidden wasn't called
+      if (_unlocked) {
+        final timeout = ref.read(lockTimeoutProvider);
+        if (timeout != -1) {
+          _pausedAt ??= DateTime.now();
           setState(() => _unlocked = false);
         }
       }
