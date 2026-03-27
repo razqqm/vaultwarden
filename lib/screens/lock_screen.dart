@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app.dart';
@@ -54,7 +55,12 @@ class _LockScreenState extends ConsumerState<LockScreen>
     }
   }
 
-  Future<void> _tryUnlock({int retries = 1}) async {
+  bool _isNotInteractiveError(Object e) =>
+      e is PlatformException &&
+      e.code == 'NotAvailable' &&
+      (e.details?.toString().contains('LocalAuthentication') ?? false);
+
+  Future<void> _tryUnlock() async {
     if (_authenticating) return;
     _authenticating = true;
     try {
@@ -72,7 +78,20 @@ class _LockScreenState extends ConsumerState<LockScreen>
       }
       if (mounted) setState(() => _biometricUnavailable = false);
 
-      await ref.read(sessionProvider.notifier).unlockWithBiometrics();
+      // Retry once if iOS reports "not interactive" (UI not yet ready).
+      for (var attempt = 0; attempt < 2; attempt++) {
+        try {
+          await ref.read(sessionProvider.notifier).unlockWithBiometrics();
+          break; // success
+        } catch (e) {
+          if (attempt == 0 && _isNotInteractiveError(e)) {
+            await Future.delayed(const Duration(milliseconds: 500));
+            if (!mounted) return;
+            continue;
+          }
+          rethrow;
+        }
+      }
       // Guard: if lock() was called while biometric was in progress,
       // the key has been zeroed — do not unlock.
       if (mounted && ref.read(userKeyProvider) != null) {
@@ -80,15 +99,6 @@ class _LockScreenState extends ConsumerState<LockScreen>
       }
     } catch (e) {
       final msg = e.toString();
-      // Retry if iOS wasn't ready for interaction.
-      if (retries > 0 &&
-          msg.contains('NotAvailable') &&
-          msg.contains('interaction')) {
-        _authenticating = false;
-        await Future.delayed(const Duration(milliseconds: 500));
-        if (mounted) await _tryUnlock(retries: retries - 1);
-        return;
-      }
       final userCancelled =
           msg.contains('UserCancelled') || msg.contains('PasscodeNotSet');
       if (mounted && !userCancelled) {
