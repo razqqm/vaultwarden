@@ -14,17 +14,47 @@ class LockScreen extends ConsumerStatefulWidget {
   ConsumerState<LockScreen> createState() => _LockScreenState();
 }
 
-class _LockScreenState extends ConsumerState<LockScreen> {
+class _LockScreenState extends ConsumerState<LockScreen>
+    with WidgetsBindingObserver {
   bool _authenticating = false;
   bool _biometricUnavailable = false;
+  bool _pendingUnlock = false;
 
   @override
   void initState() {
     super.initState();
-    _tryUnlock();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Only prompt biometrics when iOS confirms the app is fully active;
+      // calling earlier triggers "User interaction required" (LAError.notInteractive).
+      if (WidgetsBinding.instance.lifecycleState ==
+          AppLifecycleState.resumed) {
+        _tryUnlock();
+      } else {
+        _pendingUnlock = true;
+      }
+    });
   }
 
-  Future<void> _tryUnlock() async {
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _pendingUnlock) {
+      _pendingUnlock = false;
+      // Small safety margin for iOS to fully settle its UI stack.
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (mounted) _tryUnlock();
+      });
+    }
+  }
+
+  Future<void> _tryUnlock({int retries = 1}) async {
     if (_authenticating) return;
     _authenticating = true;
     try {
@@ -50,6 +80,15 @@ class _LockScreenState extends ConsumerState<LockScreen> {
       }
     } catch (e) {
       final msg = e.toString();
+      // Retry if iOS wasn't ready for interaction.
+      if (retries > 0 &&
+          msg.contains('NotAvailable') &&
+          msg.contains('interaction')) {
+        _authenticating = false;
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) await _tryUnlock(retries: retries - 1);
+        return;
+      }
       final userCancelled =
           msg.contains('UserCancelled') || msg.contains('PasscodeNotSet');
       if (mounted && !userCancelled) {
